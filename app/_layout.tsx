@@ -1,24 +1,66 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider as NavigationThemeProvider,
+} from "@react-navigation/native";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { PaperProvider } from "react-native-paper";
+import "react-native-reanimated";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: "(tabs)",
+};
+
+// React Native Paper theme
+const paperLightTheme = {
+  colors: {
+    primary: "#6200ee",
+    accent: "#03dac4",
+    background: "#f5f5f5",
+    surface: "#ffffff",
+    text: "#000000",
+    error: "#b00020",
+  },
+};
+
+const paperDarkTheme = {
+  colors: {
+    primary: "#bb86fc",
+    accent: "#03dac4",
+    background: "#121212",
+    surface: "#1e1e1e",
+    text: "#ffffff",
+    error: "#cf6679",
+  },
 };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const { theme } = useSettingsStore();
+
+  const effectiveTheme =
+    theme === "auto" ? colorScheme : theme === "dark" ? "dark" : "light";
+
+  const paperTheme =
+    effectiveTheme === "dark" ? paperDarkTheme : paperLightTheme;
+  const navigationTheme = effectiveTheme === "dark" ? DarkTheme : DefaultTheme;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <PaperProvider theme={paperTheme}>
+      <NavigationThemeProvider value={navigationTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: "modal", title: "Modal" }}
+          />
+        </Stack>
+        <StatusBar style={effectiveTheme === "dark" ? "light" : "dark"} />
+      </NavigationThemeProvider>
+    </PaperProvider>
   );
 }
