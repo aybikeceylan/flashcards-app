@@ -5,7 +5,7 @@ import {
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { PaperProvider } from "react-native-paper";
+import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -15,25 +15,27 @@ export const unstable_settings = {
   anchor: "(tabs)",
 };
 
-// React Native Paper theme
+// React Native Paper theme with custom colors
 const paperLightTheme = {
+  ...MD3LightTheme,
   colors: {
+    ...MD3LightTheme.colors,
     primary: "#6200ee",
-    accent: "#03dac4",
+    secondary: "#03dac4",
     background: "#f5f5f5",
     surface: "#ffffff",
-    text: "#000000",
     error: "#b00020",
   },
 };
 
 const paperDarkTheme = {
+  ...MD3DarkTheme,
   colors: {
+    ...MD3DarkTheme.colors,
     primary: "#bb86fc",
-    accent: "#03dac4",
+    secondary: "#03dac4",
     background: "#121212",
     surface: "#1e1e1e",
-    text: "#ffffff",
     error: "#cf6679",
   },
 };

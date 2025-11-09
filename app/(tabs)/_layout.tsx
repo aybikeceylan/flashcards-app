@@ -1,6 +1,8 @@
+import AntDesign from "@expo/vector-icons/AntDesign";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Tabs } from "expo-router";
 import React from "react";
-import { MaterialIcons } from "@expo/vector-icons";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { Colors } from "@/constants/theme";
@@ -24,7 +26,7 @@ export default function TabLayout() {
         options={{
           title: "Ana Sayfa",
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="home-filled" size={size} color={color} />
+            <FontAwesome name="home" size={size} color={color} />
           ),
         }}
       />
@@ -33,7 +35,7 @@ export default function TabLayout() {
         options={{
           title: "Kartlar",
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="style" size={size} color={color} />
+            <MaterialCommunityIcons name="cards" size={size} color={color} />
           ),
         }}
       />
@@ -42,7 +44,7 @@ export default function TabLayout() {
         options={{
           title: "Profil",
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="person" size={size} color={color} />
+            <AntDesign name="user" size={size} color={color} />
           ),
         }}
       />
@@ -51,7 +53,7 @@ export default function TabLayout() {
         options={{
           title: "Ayarlar",
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="settings" size={size} color={color} />
+            <AntDesign name="setting" size={size} color={color} />
           ),
         }}
       />
