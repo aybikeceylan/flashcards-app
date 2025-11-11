@@ -1,9 +1,9 @@
-import React from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { Text, Card, Button, Avatar, Divider } from "react-native-paper";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useCardStore } from "@/store/useCardStore";
 import { useRouter } from "expo-router";
+import React from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Avatar, Button, Card, Divider, Text } from "react-native-paper";
 
 export default function ProfileScreen() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -14,8 +14,7 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     logout();
-    // GÜN 5'te login ekranı eklenecek
-    alert("Çıkış yapıldı!");
+    router.push("/");
   };
 
   if (!isAuthenticated) {
@@ -32,8 +31,7 @@ export default function ProfileScreen() {
             <Button
               mode="contained"
               onPress={() => {
-                // GÜN 5'te login ekranı eklenecek
-                alert("Giriş ekranı yakında eklenecek!");
+                router.replace("/login");
               }}
               style={styles.button}
             >
