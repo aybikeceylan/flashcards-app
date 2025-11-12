@@ -78,6 +78,7 @@ export default function RegisterScreen() {
         email: email.trim(),
         password,
       });
+      console.log(response.data);
 
       if (response.data.success && response.data.data) {
         // API'den gelen user objesini store formatına çevir
@@ -221,7 +222,7 @@ export default function RegisterScreen() {
                 </Text>
                 <Button
                   mode="text"
-                  onPress={() => router.push("/login")}
+                  onPress={() => router.push("/(auth)/login")}
                   disabled={loading}
                   compact
                 >

@@ -138,6 +138,15 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
 export interface SuccessResponse<T = any> {
   success: boolean;
   data?: T;
@@ -181,6 +190,13 @@ export const authApi = {
   deleteProfile: () => apiClient.delete<SuccessResponse>("/auth/profile"),
   changePassword: (data: ChangePasswordRequest) =>
     apiClient.put<SuccessResponse>("/auth/profile/password", data),
+  forgotPassword: (data: ForgotPasswordRequest) =>
+    apiClient.post<SuccessResponse<{ resetToken: string }>>(
+      "/auth/forgot-password",
+      data
+    ),
+  resetPassword: (data: ResetPasswordRequest) =>
+    apiClient.post<SuccessResponse>("/auth/reset-password", data),
 };
 
 // Flashcard API endpoints

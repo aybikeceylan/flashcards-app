@@ -50,7 +50,7 @@ export default function LoginScreen() {
         email: email.trim(),
         password,
       });
-
+      console.log(response.data);
       if (response.data.success && response.data.data) {
         // API'den gelen user objesini store formatına çevir
         const user = {
@@ -151,13 +151,23 @@ export default function LoginScreen() {
                 Giriş Yap
               </Button>
 
+              <Button
+                mode="text"
+                onPress={() => router.push("/(auth)/forgot-password")}
+                disabled={loading}
+                compact
+                style={styles.forgotPasswordButton}
+              >
+                Şifremi Unuttum
+              </Button>
+
               <View style={styles.registerContainer}>
                 <Text variant="bodyMedium" style={styles.registerText}>
                   Hesabınız yok mu?{" "}
                 </Text>
                 <Button
                   mode="text"
-                  onPress={() => router.push("/register")}
+                  onPress={() => router.push("/(auth)/register")}
                   disabled={loading}
                   compact
                 >
@@ -217,8 +227,11 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     marginTop: 8,
-    marginBottom: 16,
+    marginBottom: 8,
     paddingVertical: 4,
+  },
+  forgotPasswordButton: {
+    marginBottom: 8,
   },
   registerContainer: {
     flexDirection: "row",
