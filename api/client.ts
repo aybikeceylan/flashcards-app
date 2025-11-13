@@ -179,6 +179,33 @@ export interface MultiUploadResponse {
   message: string;
 }
 
+export interface WordSuggestion {
+  word: string;
+  meaning?: string;
+}
+
+export interface SuggestionsResponse {
+  suggestions: string[];
+  count: number;
+  source: {
+    database: number;
+    google: number;
+  };
+}
+
+export interface DictionaryData {
+  word: string;
+  phonetic?: string;
+  pronunciation?: string;
+  meanings: Array<{
+    partOfSpeech: string;
+    definitions: Array<{
+      definition: string;
+      example?: string;
+    }>;
+  }>;
+}
+
 // Auth API endpoints
 export const authApi = {
   register: (data: RegisterRequest) =>
@@ -213,6 +240,24 @@ export const flashcardApi = {
     apiClient.put<SuccessResponse<Flashcard>>(`/flashcards/${id}`, data),
   delete: (id: string) =>
     apiClient.delete<SuccessResponse>(`/flashcards/${id}`),
+  getSuggestions: (query: string, limit: number = 10) => {
+    if (!query || query.trim().length < 2) {
+      return Promise.reject(new Error("Query must be at least 2 characters"));
+    }
+    return apiClient.get<SuccessResponse<SuggestionsResponse>>(
+      `/flashcards/suggestions?q=${encodeURIComponent(
+        query.trim()
+      )}&limit=${limit}`
+    );
+  },
+  getDictionary: (word: string) => {
+    if (!word || word.trim().length === 0) {
+      return Promise.reject(new Error("Word is required"));
+    }
+    return apiClient.get<SuccessResponse<DictionaryData>>(
+      `/flashcards/dictionary?word=${encodeURIComponent(word.trim())}`
+    );
+  },
 };
 
 // Upload API endpoints
