@@ -11,15 +11,18 @@ export const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Cookie'leri otomatik gönder
 });
 
 // Request interceptor - token ekleme ve logging
 apiClient.interceptors.request.use(
   (config) => {
     const token = useAuthStore.getState().token;
-    if (token) {
+    // Token varsa ve "cookie" string'i değilse Bearer token olarak ekle
+    if (token && token !== "cookie" && token !== null) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Token yoksa cookie kullanılacak (withCredentials: true sayesinde)
 
     // Network request logging
     console.log("🌐 [REQUEST]", {
@@ -92,7 +95,7 @@ export interface User {
 
 export interface AuthResponse {
   success: boolean;
-  data: User;
+  data: User & { token?: string };
   message: string;
 }
 

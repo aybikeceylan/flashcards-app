@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export interface User {
   id: string;
@@ -16,7 +16,7 @@ interface AuthState {
   // Actions
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
-  login: (user: User, token: string) => void;
+  login: (user: User, token: string | null) => void;
   logout: () => void;
 }
 

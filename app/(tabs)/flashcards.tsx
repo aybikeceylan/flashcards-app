@@ -1,13 +1,21 @@
-import React from "react";
-import { View, StyleSheet, FlatList, RefreshControl } from "react-native";
-import { Text, Card, FAB, Searchbar } from "react-native-paper";
-import { useCardStore } from "@/store/useCardStore";
+import { useFlashcards } from "@/hooks/useFlashcardQueries";
 import { useRouter } from "expo-router";
+import React from "react";
+import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
+import { Card, FAB, Searchbar, Text } from "react-native-paper";
 
 export default function FlashcardsScreen() {
-  const { cards, isLoading, setLoading } = useCardStore();
   const [searchQuery, setSearchQuery] = React.useState("");
   const router = useRouter();
+
+  // Use React Query hook for flashcards
+  const {
+    data: cards = [],
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+  } = useFlashcards();
 
   const filteredCards = cards.filter(
     (card) =>
@@ -16,17 +24,17 @@ export default function FlashcardsScreen() {
   );
 
   const onRefresh = React.useCallback(() => {
-    setLoading(true);
-    // GÜN 4'te API çağrısı eklenecek
-    setTimeout(() => setLoading(false), 1000);
-  }, [setLoading]);
+    refetch();
+  }, [refetch]);
 
   const renderCard = ({ item }: { item: any }) => (
     <Card
       style={styles.card}
       onPress={() => {
-        // GÜN 4'te card detail ekranı eklenecek
-        alert(`Kart detayı: ${item.word}`);
+        router.push({
+          pathname: "/flashcard-detail",
+          params: { id: item.id },
+        });
       }}
     >
       <Card.Content>
@@ -57,7 +65,10 @@ export default function FlashcardsScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={isLoading || isRefetching}
+            onRefresh={onRefresh}
+          />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -74,8 +85,7 @@ export default function FlashcardsScreen() {
         icon="plus"
         style={styles.fab}
         onPress={() => {
-          // GÜN 4'te add card ekranı eklenecek
-          alert("Yeni kart ekleme yakında eklenecek!");
+          router.push("/modal");
         }}
       />
     </View>

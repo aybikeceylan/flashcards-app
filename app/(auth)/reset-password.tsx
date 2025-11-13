@@ -95,8 +95,9 @@ export default function ResetPasswordScreen() {
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="always"
-        keyboardDismissMode="none"
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
           <Card style={styles.card}>
@@ -151,7 +152,11 @@ export default function ResetPasswordScreen() {
                     mode="outlined"
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
-                    autoComplete="off"
+                    autoComplete="new-password"
+                    keyboardType="default"
+                    textContentType="newPassword"
+                    passwordRules="required: upper; required: lower; required: digit; minlength: 6;"
+                    returnKeyType="next"
                     style={styles.input}
                     disabled={loading}
                     blurOnSubmit={false}
@@ -175,10 +180,15 @@ export default function ResetPasswordScreen() {
                     mode="outlined"
                     secureTextEntry={!showConfirmPassword}
                     autoCapitalize="none"
-                    autoComplete="off"
+                    autoComplete="new-password"
+                    keyboardType="default"
+                    textContentType="newPassword"
+                    passwordRules="required: upper; required: lower; required: digit; minlength: 6;"
+                    returnKeyType="done"
                     style={styles.input}
                     disabled={loading}
-                    blurOnSubmit={false}
+                    blurOnSubmit={true}
+                    onSubmitEditing={handleResetPassword}
                     outlineColor="#6200ee"
                     activeOutlineColor="#6200ee"
                     textColor="#000000"

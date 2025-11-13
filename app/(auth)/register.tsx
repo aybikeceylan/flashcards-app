@@ -89,9 +89,10 @@ export default function RegisterScreen() {
           avatar: response.data.data.avatar,
         };
 
-        // Token httpOnly cookie olarak set ediliyor (Swagger dokümanına göre)
-        // Cookie otomatik olarak gönderilecek, token'ı store'a kaydetmeye gerek yok
-        login(user, "cookie"); // Cookie kullanıldığını belirtmek için placeholder
+        // Token'ı store'a kaydet (response'da token varsa)
+        const token: string | null = response.data.data.token || null;
+        // Token varsa kaydet, yoksa null (cookie kullanılacak)
+        login(user, token);
 
         // Başarılı kayıt sonrası ana sayfaya yönlendir
         router.replace("/(tabs)");
@@ -118,8 +119,9 @@ export default function RegisterScreen() {
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="always"
-        keyboardDismissMode="none"
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
           <Card style={styles.card}>
@@ -138,6 +140,9 @@ export default function RegisterScreen() {
                 mode="outlined"
                 autoCapitalize="words"
                 autoComplete="name"
+                keyboardType="default"
+                textContentType="name"
+                returnKeyType="next"
                 style={styles.input}
                 disabled={loading}
                 blurOnSubmit={false}
@@ -152,6 +157,8 @@ export default function RegisterScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
+                textContentType="emailAddress"
+                returnKeyType="next"
                 style={styles.input}
                 disabled={loading}
                 blurOnSubmit={false}
@@ -165,7 +172,11 @@ export default function RegisterScreen() {
                 mode="outlined"
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
-                autoComplete="off"
+                autoComplete="new-password"
+                keyboardType="default"
+                textContentType="newPassword"
+                passwordRules="required: upper; required: lower; required: digit; minlength: 6;"
+                returnKeyType="next"
                 style={styles.input}
                 disabled={loading}
                 blurOnSubmit={false}
@@ -189,10 +200,15 @@ export default function RegisterScreen() {
                 mode="outlined"
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
-                autoComplete="off"
+                autoComplete="new-password"
+                keyboardType="default"
+                textContentType="newPassword"
+                passwordRules="required: upper; required: lower; required: digit; minlength: 6;"
+                returnKeyType="done"
                 style={styles.input}
                 disabled={loading}
-                blurOnSubmit={false}
+                blurOnSubmit={true}
+                onSubmitEditing={handleRegister}
                 outlineColor="#6200ee"
                 activeOutlineColor="#6200ee"
                 textColor="#000000"

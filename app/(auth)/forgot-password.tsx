@@ -78,8 +78,9 @@ export default function ForgotPasswordScreen() {
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="always"
-        keyboardDismissMode="none"
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
           <Card style={styles.card}>
@@ -159,9 +160,12 @@ export default function ForgotPasswordScreen() {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
+                    textContentType="emailAddress"
+                    returnKeyType="done"
                     style={styles.input}
                     disabled={loading}
-                    blurOnSubmit={false}
+                    blurOnSubmit={true}
+                    onSubmitEditing={handleForgotPassword}
                     left={<TextInput.Icon icon="email" />}
                   />
 
