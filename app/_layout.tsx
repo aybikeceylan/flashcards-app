@@ -1,11 +1,13 @@
+import { Ionicons } from "@expo/vector-icons";
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider as NavigationThemeProvider,
 } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { TouchableOpacity } from "react-native";
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
 import "react-native-reanimated";
 
@@ -52,6 +54,26 @@ const paperDarkTheme = {
   },
 };
 
+function CustomBackButton() {
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const { theme } = useSettingsStore();
+
+  const effectiveTheme =
+    theme === "auto" ? colorScheme : theme === "dark" ? "dark" : "light";
+
+  const iconColor = effectiveTheme === "dark" ? "#fff" : "#000";
+
+  return (
+    <TouchableOpacity
+      onPress={() => router.back()}
+      style={{ marginLeft: 8, marginRight: 10 }}
+    >
+      <Ionicons name="arrow-back" size={24} color={iconColor} />
+    </TouchableOpacity>
+  );
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const { theme } = useSettingsStore();
@@ -81,11 +103,19 @@ export default function RootLayout() {
             />
             <Stack.Screen
               name="flashcard-detail"
-              options={{ title: "Kart Detayı" }}
+              options={{
+                title: "Kart Detayı",
+                headerBackTitle: "",
+                headerLeft: () => <CustomBackButton />,
+              }}
             />
             <Stack.Screen
               name="edit-flashcard"
-              options={{ title: "Kartı Düzenle" }}
+              options={{
+                title: "Kartı Düzenle",
+                headerBackTitle: "",
+                headerLeft: () => <CustomBackButton />,
+              }}
             />
           </Stack>
           <StatusBar style={effectiveTheme === "dark" ? "light" : "dark"} />
