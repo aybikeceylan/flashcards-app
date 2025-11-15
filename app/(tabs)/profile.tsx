@@ -1,16 +1,33 @@
+import NotificationCenter from "@/components/NotificationCenter";
+import { useNotificationHistory } from "@/hooks/useNotificationQueries";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useCardStore } from "@/store/useCardStore";
 import { useRouter } from "expo-router";
-import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { Avatar, Button, Card, Divider, Text } from "react-native-paper";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Avatar,
+  Button,
+  Card,
+  Divider,
+  Text as PaperText,
+} from "react-native-paper";
 
 export default function ProfileScreen() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const { cards } = useCardStore();
   const router = useRouter();
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Sadece authenticated kullanıcılar için notification history çek
+  const { data: historyData } = useNotificationHistory(
+    isAuthenticated ? { limit: 100 } : undefined
+  );
 
   const favoriteCount = cards.filter((card) => card.isFavorite).length;
+  const notifications = historyData?.notifications || [];
+  const unreadNotifications =
+    (isAuthenticated && notifications.filter((n) => !n.read).length) || 0;
 
   const handleLogout = () => {
     logout();
@@ -22,12 +39,12 @@ export default function ProfileScreen() {
       <View style={styles.container}>
         <Card style={styles.card}>
           <Card.Content>
-            <Text variant="titleLarge" style={styles.title}>
+            <PaperText variant="titleLarge" style={styles.title}>
               Giriş Yapın
-            </Text>
-            <Text variant="bodyMedium" style={styles.subtitle}>
+            </PaperText>
+            <PaperText variant="bodyMedium" style={styles.subtitle}>
               Kartlarınızı senkronize etmek için giriş yapın
-            </Text>
+            </PaperText>
             <Button
               mode="contained"
               onPress={() => {
@@ -51,36 +68,36 @@ export default function ProfileScreen() {
           label={user?.name?.charAt(0).toUpperCase() || "U"}
           style={styles.avatar}
         />
-        <Text variant="headlineMedium" style={styles.name}>
+        <PaperText variant="headlineMedium" style={styles.name}>
           {user?.name || "Kullanıcı"}
-        </Text>
-        <Text variant="bodyMedium" style={styles.email}>
+        </PaperText>
+        <PaperText variant="bodyMedium" style={styles.email}>
           {user?.email}
-        </Text>
+        </PaperText>
       </View>
 
       <Card style={styles.card}>
         <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
+          <PaperText variant="titleMedium" style={styles.sectionTitle}>
             İstatistikler
-          </Text>
+          </PaperText>
           <Divider style={styles.divider} />
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text variant="headlineSmall" style={styles.statNumber}>
+              <PaperText variant="headlineSmall" style={styles.statNumber}>
                 {cards.length}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
+              </PaperText>
+              <PaperText variant="bodySmall" style={styles.statLabel}>
                 Toplam Kart
-              </Text>
+              </PaperText>
             </View>
             <View style={styles.statItem}>
-              <Text variant="headlineSmall" style={styles.statNumber}>
+              <PaperText variant="headlineSmall" style={styles.statNumber}>
                 {favoriteCount}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
+              </PaperText>
+              <PaperText variant="bodySmall" style={styles.statLabel}>
                 Favori
-              </Text>
+              </PaperText>
             </View>
           </View>
         </Card.Content>
@@ -88,6 +105,20 @@ export default function ProfileScreen() {
 
       <Card style={styles.card}>
         <Card.Content>
+          <Button
+            mode="outlined"
+            onPress={() => setShowNotifications(!showNotifications)}
+            icon="bell"
+            style={styles.menuButton}
+            contentStyle={styles.notificationButtonContent}
+          >
+            Bildirimler
+            {unreadNotifications > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadNotifications}</Text>
+              </View>
+            )}
+          </Button>
           <Button
             mode="outlined"
             onPress={() => router.push("/settings")}
@@ -107,6 +138,12 @@ export default function ProfileScreen() {
           </Button>
         </Card.Content>
       </Card>
+
+      {showNotifications && (
+        <View style={styles.notificationContainer}>
+          <NotificationCenter limit={20} showHeader={true} />
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -167,5 +204,29 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 8,
+  },
+  notificationContainer: {
+    flex: 1,
+    minHeight: 400,
+  },
+  notificationButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badge: {
+    backgroundColor: "#d32f2f",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    marginLeft: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
   },
 });

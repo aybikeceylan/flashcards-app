@@ -65,8 +65,20 @@ apiClient.interceptors.response.use(
     });
 
     if (error.response?.status === 401) {
-      // Token geçersiz, logout yap
-      useAuthStore.getState().logout();
+      // Token geçersiz veya kullanıcı kimliği bulunamadı
+      const authStore = useAuthStore.getState();
+      const errorMessage = error.response?.data?.message || "";
+
+      // "Kullanıcı kimliği bulunamadı" hatası backend authentication sorunu olabilir
+      // Bu durumda logout yapmıyoruz, sadece logluyoruz
+      if (errorMessage.includes("Kullanıcı kimliği bulunamadı")) {
+        console.warn("⚠️ Backend authentication sorunu:", errorMessage);
+        // Logout yapmıyoruz çünkü bu backend'in authentication middleware sorunu olabilir
+      } else if (authStore.isAuthenticated) {
+        // Diğer 401 hataları için (token geçersiz, unauthorized vb.) logout yap
+        console.log("Token geçersiz veya unauthorized, logout yapılıyor...");
+        authStore.logout();
+      }
     }
     return Promise.reject(error);
   }
@@ -206,6 +218,77 @@ export interface DictionaryData {
   }>;
 }
 
+export interface Notification {
+  _id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: "info" | "success" | "warning" | "error";
+  read: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Backend'den dönen format
+export interface BackendNotificationPreferences {
+  dailyReminder?: boolean;
+  reminderTime?: string; // Günlük hatırlatma saati (HH:mm format)
+  motivationFrequency?: string;
+  motivationMessages?: boolean;
+  email?: boolean;
+  push?: boolean;
+  sms?: boolean;
+  types?: {
+    info?: boolean;
+    success?: boolean;
+    warning?: boolean;
+    error?: boolean;
+  };
+}
+
+// Frontend'de kullanılan format
+export interface NotificationPreferences {
+  email?: boolean;
+  push?: boolean;
+  sms?: boolean;
+  enabled?: boolean; // Bildirimleri etkinleştir (backend'deki dailyReminder)
+  dailyReminderTime?: string; // Günlük hatırlatma saati (HH:mm format) (backend'deki reminderTime)
+  types?: {
+    info?: boolean;
+    success?: boolean;
+    warning?: boolean;
+    error?: boolean;
+  };
+}
+
+export interface UpdateNotificationPreferencesRequest {
+  email?: boolean;
+  push?: boolean;
+  sms?: boolean;
+  enabled?: boolean; // Bildirimleri etkinleştir
+  dailyReminderTime?: string; // Günlük hatırlatma saati (HH:mm format)
+  types?: {
+    info?: boolean;
+    success?: boolean;
+    warning?: boolean;
+    error?: boolean;
+  };
+}
+
+export interface NotificationHistoryParams {
+  limit?: number;
+  page?: number;
+  type?: string;
+  read?: boolean;
+}
+
+export interface NotificationHistoryResponse {
+  currentPage: number;
+  notifications: Notification[];
+  totalItems: number;
+  totalPages: number;
+}
+
 // Auth API endpoints
 export const authApi = {
   register: (data: RegisterRequest) =>
@@ -280,6 +363,52 @@ export const uploadApi = {
         "Content-Type": "multipart/form-data",
       },
     }),
+};
+
+// Notification API endpoints
+export const notificationApi = {
+  // GET /api/notifications/preferences - Kullanıcının notification tercihlerini getir
+  getPreferences: () =>
+    apiClient.get<SuccessResponse<BackendNotificationPreferences>>(
+      "/notifications/preferences"
+    ),
+
+  // PUT /api/notifications/preferences - Kullanıcının notification tercihlerini güncelle
+  updatePreferences: (data: UpdateNotificationPreferencesRequest) => {
+    // Frontend formatını backend formatına çevir
+    const backendData: any = {
+      ...data,
+    };
+    // enabled -> dailyReminder mapping
+    if (data.enabled !== undefined) {
+      backendData.dailyReminder = data.enabled;
+      delete backendData.enabled;
+    }
+    // dailyReminderTime -> reminderTime mapping
+    if (data.dailyReminderTime !== undefined) {
+      backendData.reminderTime = data.dailyReminderTime;
+      delete backendData.dailyReminderTime;
+    }
+    return apiClient.put<SuccessResponse<BackendNotificationPreferences>>(
+      "/notifications/preferences",
+      backendData
+    );
+  },
+
+  // GET /api/notifications/history - Kullanıcının notification geçmişini getir
+  getHistory: (params?: NotificationHistoryParams) => {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.type) queryParams.append("type", params.type);
+    if (params?.read !== undefined)
+      queryParams.append("read", params.read.toString());
+
+    const query = queryParams.toString();
+    return apiClient.get<SuccessResponse<NotificationHistoryResponse>>(
+      `/notifications/history${query ? `?${query}` : ""}`
+    );
+  },
 };
 
 // Legacy cardApi (for backward compatibility, redirects to flashcardApi)

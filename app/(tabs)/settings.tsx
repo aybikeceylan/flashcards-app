@@ -1,9 +1,24 @@
-import React from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { Text, Card, Switch, List, Divider, Button } from "react-native-paper";
+import TimePickerModal from "@/components/TimePickerModal";
+import {
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+} from "@/hooks/useNotificationQueries";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import React, { useEffect, useState } from "react";
+import { ScrollView, StyleSheet } from "react-native";
+import {
+  Button,
+  Card,
+  Divider,
+  List,
+  Snackbar,
+  Switch,
+  Text,
+} from "react-native-paper";
 
 export default function SettingsScreen() {
+  const { isAuthenticated } = useAuthStore();
   const {
     theme,
     notificationsEnabled,
@@ -15,6 +30,111 @@ export default function SettingsScreen() {
     setCardsPerSession,
   } = useSettingsStore();
 
+  const [timePickerVisible, setTimePickerVisible] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  // Backend'den notification preferences çek
+  const { data: preferences, isLoading: isLoadingPreferences } =
+    useNotificationPreferences();
+  const updatePreferences = useUpdateNotificationPreferences();
+
+  // Backend'den gelen preferences'i local store'a senkronize et
+  useEffect(() => {
+    if (preferences && isAuthenticated) {
+      if (preferences.enabled !== undefined) {
+        setNotificationsEnabled(preferences.enabled);
+      }
+      if (preferences.dailyReminderTime) {
+        // Zaman formatını normalize et (HH:mm)
+        const normalizedTime = normalizeTimeFormat(
+          preferences.dailyReminderTime
+        );
+        setDailyReminderTime(normalizedTime);
+      }
+    }
+  }, [
+    preferences,
+    isAuthenticated,
+    setNotificationsEnabled,
+    setDailyReminderTime,
+  ]);
+
+  // Zaman formatını normalize et (HH:mm formatına çevir)
+  const normalizeTimeFormat = (time: string): string => {
+    if (!time) return "09:00";
+
+    // Eğer zaten HH:mm formatındaysa döndür
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5]?[0-9])$/;
+    if (timeRegex.test(time)) {
+      const [hours, minutes] = time.split(":");
+      // Saat ve dakikayı 2 haneli yap (09:00 gibi)
+      const normalizedHours = hours.padStart(2, "0");
+      const normalizedMinutes = minutes.padStart(2, "0");
+      return `${normalizedHours}:${normalizedMinutes}`;
+    }
+
+    return time; // Format tanınmıyorsa olduğu gibi döndür
+  };
+
+  const handleNotificationToggle = async (enabled: boolean) => {
+    if (!isAuthenticated) {
+      setSnackbarMessage(
+        "Bildirim ayarlarını değiştirmek için giriş yapmalısınız"
+      );
+      setSnackbarVisible(true);
+      return;
+    }
+
+    setNotificationsEnabled(enabled);
+
+    try {
+      await updatePreferences.mutateAsync({
+        enabled,
+      });
+      setSnackbarMessage(
+        enabled
+          ? "Bildirimler etkinleştirildi"
+          : "Bildirimler devre dışı bırakıldı"
+      );
+      setSnackbarVisible(true);
+    } catch (error: any) {
+      console.error("Error updating notification preferences:", error);
+      setSnackbarMessage("Ayarlar güncellenirken bir hata oluştu");
+      setSnackbarVisible(true);
+      // Rollback
+      setNotificationsEnabled(!enabled);
+    }
+  };
+
+  const handleTimeChange = async (time: string) => {
+    if (!isAuthenticated) {
+      setSnackbarMessage(
+        "Hatırlatma saatini değiştirmek için giriş yapmalısınız"
+      );
+      setSnackbarVisible(true);
+      return;
+    }
+
+    // Zaman formatını normalize et
+    const normalizedTime = normalizeTimeFormat(time);
+    setDailyReminderTime(normalizedTime);
+
+    try {
+      await updatePreferences.mutateAsync({
+        dailyReminderTime: normalizedTime,
+      });
+      setSnackbarMessage(
+        `Hatırlatma saati ${normalizedTime} olarak güncellendi`
+      );
+      setSnackbarVisible(true);
+    } catch (error: any) {
+      console.error("Error updating reminder time:", error);
+      setSnackbarMessage("Saat güncellenirken bir hata oluştu");
+      setSnackbarVisible(true);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Card style={styles.card}>
@@ -25,22 +145,35 @@ export default function SettingsScreen() {
           <Divider style={styles.divider} />
           <List.Item
             title="Bildirimleri Etkinleştir"
-            description="Günlük hatırlatmalar için bildirim al"
+            description={
+              isAuthenticated
+                ? "Günlük hatırlatmalar için bildirim al"
+                : "Giriş yaparak bildirim ayarlarını yönetin"
+            }
             left={(props) => <List.Icon {...props} icon="bell" />}
             right={() => (
               <Switch
                 value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
+                onValueChange={handleNotificationToggle}
+                disabled={!isAuthenticated || isLoadingPreferences}
               />
             )}
           />
           <List.Item
             title="Günlük Hatırlatma Saati"
-            description={dailyReminderTime}
+            description={dailyReminderTime || "09:00"}
             left={(props) => <List.Icon {...props} icon="clock" />}
             onPress={() => {
-              // GÜN 6'da time picker eklenecek
+              if (!isAuthenticated) {
+                setSnackbarMessage(
+                  "Hatırlatma saatini değiştirmek için giriş yapmalısınız"
+                );
+                setSnackbarVisible(true);
+                return;
+              }
+              setTimePickerVisible(true);
             }}
+            disabled={!isAuthenticated || isLoadingPreferences}
           />
         </Card.Content>
       </Card>
@@ -113,6 +246,21 @@ export default function SettingsScreen() {
           </Button>
         </Card.Content>
       </Card>
+
+      <TimePickerModal
+        visible={timePickerVisible}
+        onDismiss={() => setTimePickerVisible(false)}
+        onConfirm={handleTimeChange}
+        initialTime={dailyReminderTime || "09:00"}
+      />
+
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+      >
+        {snackbarMessage}
+      </Snackbar>
     </ScrollView>
   );
 }
