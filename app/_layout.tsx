@@ -12,7 +12,10 @@ import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useFCMToken } from "@/hooks/useFCMToken";
+import { notificationService } from "@/services/notificationService";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { useEffect } from "react";
 
 // Create a QueryClient instance
 const queryClient = new QueryClient({
@@ -74,6 +77,54 @@ function CustomBackButton() {
   );
 }
 
+// Component to initialize FCM token and notifications inside QueryClientProvider
+function NotificationInitializer() {
+  const router = useRouter();
+
+  // Initialize FCM token management (must be inside QueryClientProvider)
+  useFCMToken();
+
+  // Setup notification listeners
+  useEffect(() => {
+    try {
+      notificationService.setupNotificationListeners({
+        onNotificationReceived: (notification) => {
+          try {
+            console.log("📬 Notification received:", notification);
+            // Handle foreground notifications if needed
+          } catch (error) {
+            console.error("Error handling notification:", error);
+          }
+        },
+        onNotificationTapped: (response) => {
+          try {
+            console.log("👆 Notification tapped:", response);
+            const data = response?.notification?.request?.content?.data;
+            // Navigate based on notification data if needed
+            if (data?.screen && router) {
+              router.push(data.screen as any);
+            }
+          } catch (error) {
+            console.error("Error handling notification tap:", error);
+          }
+        },
+      });
+    } catch (error) {
+      console.error("Error setting up notification listeners:", error);
+    }
+
+    return () => {
+      try {
+        notificationService.removeNotificationListeners();
+      } catch (error) {
+        console.error("Error cleaning up notification listeners:", error);
+      }
+    };
+  }, [router]);
+
+  return null;
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const { theme } = useSettingsStore();
@@ -87,6 +138,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <NotificationInitializer />
       <PaperProvider theme={paperTheme}>
         <NavigationThemeProvider value={navigationTheme}>
           <Stack>

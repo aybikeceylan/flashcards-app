@@ -409,6 +409,26 @@ export const notificationApi = {
       `/notifications/history${query ? `?${query}` : ""}`
     );
   },
+
+  // POST /api/notifications/fcm-token - FCM token kaydet/güncelle
+  saveFCMToken: (token: string) =>
+    apiClient.post<SuccessResponse<string>>("/notifications/fcm-token", {
+      token,
+    }),
+
+  // DELETE /api/notifications/fcm-token - FCM token kaldır
+  deleteFCMToken: (token: string) =>
+    apiClient.delete<SuccessResponse>("/notifications/fcm-token", {
+      data: { token },
+    }),
+
+  // POST /api/notifications/test/daily-reminder - Test daily reminder notification
+  testDailyReminder: () =>
+    apiClient.post<SuccessResponse>("/notifications/test/daily-reminder"),
+
+  // POST /api/notifications/test/motivation - Test motivation notification
+  testMotivation: () =>
+    apiClient.post<SuccessResponse>("/notifications/test/motivation"),
 };
 
 // Legacy cardApi (for backward compatibility, redirects to flashcardApi)

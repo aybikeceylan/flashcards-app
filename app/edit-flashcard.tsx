@@ -6,13 +6,11 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import {
@@ -355,239 +353,235 @@ export default function EditFlashcardScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          showsVerticalScrollIndicator={true}
-          nestedScrollEnabled={true}
-          bounces={true}
-          scrollEnabled={true}
-          alwaysBounceVertical={false}
-        >
-          <Card style={styles.card}>
-            <Card.Content>
-              <Text variant="headlineMedium" style={styles.title}>
-                Kartı Düzenle
-              </Text>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={true}
+        nestedScrollEnabled={true}
+        bounces={true}
+        scrollEnabled={true}
+        alwaysBounceVertical={false}
+      >
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text variant="headlineMedium" style={styles.title}>
+              Kartı Düzenle
+            </Text>
 
-              <View style={styles.wordInputContainer}>
-                <TextInput
-                  ref={wordInputRef}
-                  label="Kelime *"
-                  value={word}
-                  onChangeText={(text) => {
-                    setWord(text);
-                    setPhonetic(null); // Clear phonetic when word changes
-                    if (text.trim().length >= 2) {
-                      setShowSuggestions(true);
-                    }
-                  }}
-                  onFocus={() => {
-                    if (suggestions.length > 0) {
-                      setShowSuggestions(true);
-                    }
-                  }}
-                  onBlur={() => {
-                    // Delay to allow suggestion selection
-                    setTimeout(() => setShowSuggestions(false), 200);
-                  }}
-                  mode="outlined"
-                  autoCapitalize="none"
-                  style={styles.input}
-                  disabled={updateFlashcard.isPending}
-                  outlineColor="#6200ee"
-                  activeOutlineColor="#6200ee"
-                  left={<TextInput.Icon icon="text" />}
-                  right={
-                    isLoadingSuggestions ? (
-                      <TextInput.Icon icon="loading" />
-                    ) : undefined
+            <View style={styles.wordInputContainer}>
+              <TextInput
+                ref={wordInputRef}
+                label="Kelime *"
+                value={word}
+                onChangeText={(text) => {
+                  setWord(text);
+                  setPhonetic(null); // Clear phonetic when word changes
+                  if (text.trim().length >= 2) {
+                    setShowSuggestions(true);
                   }
-                />
-                {showSuggestions && suggestions.length > 0 && (
-                  <View style={styles.suggestionsContainer}>
-                    <ScrollView
-                      style={styles.suggestionsScrollView}
-                      nestedScrollEnabled={true}
-                      keyboardShouldPersistTaps="handled"
-                    >
-                      {suggestions.map((item, index) => (
-                        <TouchableOpacity
-                          key={`${item.word}-${index}`}
-                          style={[
-                            styles.suggestionItem,
-                            index === suggestions.length - 1 &&
-                              styles.suggestionItemLast,
-                          ]}
-                          onPress={() => handleSuggestionSelect(item)}
+                }}
+                onFocus={() => {
+                  if (suggestions.length > 0) {
+                    setShowSuggestions(true);
+                  }
+                }}
+                onBlur={() => {
+                  // Delay to allow suggestion selection
+                  setTimeout(() => setShowSuggestions(false), 200);
+                }}
+                mode="outlined"
+                autoCapitalize="none"
+                style={styles.input}
+                disabled={updateFlashcard.isPending}
+                outlineColor="#6200ee"
+                activeOutlineColor="#6200ee"
+                left={<TextInput.Icon icon="text" />}
+                right={
+                  isLoadingSuggestions ? (
+                    <TextInput.Icon icon="loading" />
+                  ) : undefined
+                }
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <View style={styles.suggestionsContainer}>
+                  <ScrollView
+                    style={styles.suggestionsScrollView}
+                    nestedScrollEnabled={true}
+                    keyboardShouldPersistTaps="handled"
+                  >
+                    {suggestions.map((item, index) => (
+                      <TouchableOpacity
+                        key={`${item.word}-${index}`}
+                        style={[
+                          styles.suggestionItem,
+                          index === suggestions.length - 1 &&
+                            styles.suggestionItemLast,
+                        ]}
+                        onPress={() => handleSuggestionSelect(item)}
+                      >
+                        <Text
+                          variant="bodyMedium"
+                          style={styles.suggestionWord}
                         >
+                          {item.word}
+                        </Text>
+                        {item.meaning && (
                           <Text
-                            variant="bodyMedium"
-                            style={styles.suggestionWord}
+                            variant="bodySmall"
+                            style={styles.suggestionMeaning}
                           >
-                            {item.word}
+                            {item.meaning}
                           </Text>
-                          {item.meaning && (
-                            <Text
-                              variant="bodySmall"
-                              style={styles.suggestionMeaning}
-                            >
-                              {item.meaning}
-                            </Text>
-                          )}
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  </View>
-                )}
-                {phonetic && (
-                  <Text variant="bodySmall" style={styles.phoneticText}>
-                    {phonetic}
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+              {phonetic && (
+                <Text variant="bodySmall" style={styles.phoneticText}>
+                  {phonetic}
+                </Text>
+              )}
+            </View>
+
+            <TextInput
+              label="Anlam *"
+              value={meaning}
+              onChangeText={setMeaning}
+              mode="outlined"
+              multiline
+              style={[styles.input, styles.multilineInput]}
+              disabled={updateFlashcard.isPending}
+              outlineColor="#6200ee"
+              activeOutlineColor="#6200ee"
+              left={<TextInput.Icon icon="book-open-variant" />}
+            />
+
+            <TextInput
+              label="Örnek Cümle"
+              value={example}
+              onChangeText={setExample}
+              mode="outlined"
+              multiline
+              style={[styles.input, styles.multilineInput]}
+              disabled={updateFlashcard.isPending}
+              outlineColor="#6200ee"
+              activeOutlineColor="#6200ee"
+              left={<TextInput.Icon icon="format-quote-close" />}
+            />
+
+            <View style={styles.checkboxContainer}>
+              <Checkbox
+                status={isFavorite ? "checked" : "unchecked"}
+                onPress={() => setIsFavorite(!isFavorite)}
+                disabled={updateFlashcard.isPending}
+              />
+              <Text
+                variant="bodyMedium"
+                onPress={() => setIsFavorite(!isFavorite)}
+                style={styles.checkboxLabel}
+              >
+                Favorilere Ekle
+              </Text>
+            </View>
+
+            <View style={styles.uploadSection}>
+              <Text variant="titleSmall" style={styles.sectionTitle}>
+                Resim
+              </Text>
+              {(imageUri || imageUrl) && (
+                <View style={styles.imagePreview}>
+                  <Image
+                    source={{ uri: imageUri || imageUrl || "" }}
+                    style={styles.previewImage}
+                    contentFit="cover"
+                  />
+                  <Button
+                    mode="text"
+                    onPress={() => {
+                      setImageUri(null);
+                      setImageUrl(null);
+                    }}
+                    compact
+                  >
+                    Kaldır
+                  </Button>
+                </View>
+              )}
+              <Button
+                mode="outlined"
+                onPress={pickImage}
+                disabled={updateFlashcard.isPending}
+                icon="image"
+                style={styles.uploadButton}
+              >
+                {imageUri || imageUrl ? "Resmi Değiştir" : "Resim Seç"}
+              </Button>
+            </View>
+
+            <View style={styles.uploadSection}>
+              <Text variant="titleSmall" style={styles.sectionTitle}>
+                Ses Dosyası
+              </Text>
+              {(audioUri || audioUrl) && (
+                <View style={styles.audioPreview}>
+                  <Text variant="bodySmall" style={styles.audioText}>
+                    {audioUri
+                      ? `Yeni ses dosyası seçildi: ${audioUri.split("/").pop()}`
+                      : audioUrl
+                      ? "Mevcut ses dosyası var"
+                      : ""}
                   </Text>
-                )}
-              </View>
-
-              <TextInput
-                label="Anlam *"
-                value={meaning}
-                onChangeText={setMeaning}
+                  <Button
+                    mode="text"
+                    onPress={() => {
+                      setAudioUri(null);
+                      setAudioUrl(null);
+                    }}
+                    compact
+                  >
+                    Kaldır
+                  </Button>
+                </View>
+              )}
+              <Button
                 mode="outlined"
-                multiline
-                style={[styles.input, styles.multilineInput]}
+                onPress={pickAudio}
                 disabled={updateFlashcard.isPending}
-                outlineColor="#6200ee"
-                activeOutlineColor="#6200ee"
-                left={<TextInput.Icon icon="book-open-variant" />}
-              />
+                icon="music"
+                style={styles.uploadButton}
+              >
+                {audioUri || audioUrl
+                  ? "Ses Dosyasını Değiştir"
+                  : "Ses Dosyası Seç"}
+              </Button>
+            </View>
 
-              <TextInput
-                label="Örnek Cümle"
-                value={example}
-                onChangeText={setExample}
+            <View style={styles.buttonContainer}>
+              <Button
                 mode="outlined"
-                multiline
-                style={[styles.input, styles.multilineInput]}
+                onPress={() => router.back()}
                 disabled={updateFlashcard.isPending}
-                outlineColor="#6200ee"
-                activeOutlineColor="#6200ee"
-                left={<TextInput.Icon icon="format-quote-close" />}
-              />
-
-              <View style={styles.checkboxContainer}>
-                <Checkbox
-                  status={isFavorite ? "checked" : "unchecked"}
-                  onPress={() => setIsFavorite(!isFavorite)}
-                  disabled={updateFlashcard.isPending}
-                />
-                <Text
-                  variant="bodyMedium"
-                  onPress={() => setIsFavorite(!isFavorite)}
-                  style={styles.checkboxLabel}
-                >
-                  Favorilere Ekle
-                </Text>
-              </View>
-
-              <View style={styles.uploadSection}>
-                <Text variant="titleSmall" style={styles.sectionTitle}>
-                  Resim
-                </Text>
-                {(imageUri || imageUrl) && (
-                  <View style={styles.imagePreview}>
-                    <Image
-                      source={{ uri: imageUri || imageUrl || "" }}
-                      style={styles.previewImage}
-                      contentFit="cover"
-                    />
-                    <Button
-                      mode="text"
-                      onPress={() => {
-                        setImageUri(null);
-                        setImageUrl(null);
-                      }}
-                      compact
-                    >
-                      Kaldır
-                    </Button>
-                  </View>
-                )}
-                <Button
-                  mode="outlined"
-                  onPress={pickImage}
-                  disabled={updateFlashcard.isPending}
-                  icon="image"
-                  style={styles.uploadButton}
-                >
-                  {imageUri || imageUrl ? "Resmi Değiştir" : "Resim Seç"}
-                </Button>
-              </View>
-
-              <View style={styles.uploadSection}>
-                <Text variant="titleSmall" style={styles.sectionTitle}>
-                  Ses Dosyası
-                </Text>
-                {(audioUri || audioUrl) && (
-                  <View style={styles.audioPreview}>
-                    <Text variant="bodySmall" style={styles.audioText}>
-                      {audioUri
-                        ? `Yeni ses dosyası seçildi: ${audioUri
-                            .split("/")
-                            .pop()}`
-                        : audioUrl
-                        ? "Mevcut ses dosyası var"
-                        : ""}
-                    </Text>
-                    <Button
-                      mode="text"
-                      onPress={() => {
-                        setAudioUri(null);
-                        setAudioUrl(null);
-                      }}
-                      compact
-                    >
-                      Kaldır
-                    </Button>
-                  </View>
-                )}
-                <Button
-                  mode="outlined"
-                  onPress={pickAudio}
-                  disabled={updateFlashcard.isPending}
-                  icon="music"
-                  style={styles.uploadButton}
-                >
-                  {audioUri || audioUrl
-                    ? "Ses Dosyasını Değiştir"
-                    : "Ses Dosyası Seç"}
-                </Button>
-              </View>
-
-              <View style={styles.buttonContainer}>
-                <Button
-                  mode="outlined"
-                  onPress={() => router.back()}
-                  disabled={updateFlashcard.isPending}
-                  style={styles.cancelButton}
-                >
-                  İptal
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={handleSubmit}
-                  disabled={updateFlashcard.isPending}
-                  loading={updateFlashcard.isPending}
-                  style={styles.submitButton}
-                >
-                  Güncelle
-                </Button>
-              </View>
-            </Card.Content>
-          </Card>
-        </ScrollView>
-      </TouchableWithoutFeedback>
+                style={styles.cancelButton}
+              >
+                İptal
+              </Button>
+              <Button
+                mode="contained"
+                onPress={handleSubmit}
+                disabled={updateFlashcard.isPending}
+                loading={updateFlashcard.isPending}
+                style={styles.submitButton}
+              >
+                Güncelle
+              </Button>
+            </View>
+          </Card.Content>
+        </Card>
+      </ScrollView>
 
       <Snackbar
         visible={snackbarVisible}

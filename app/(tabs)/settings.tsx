@@ -1,3 +1,4 @@
+import { notificationApi } from "@/api/client";
 import TimePickerModal from "@/components/TimePickerModal";
 import {
   useNotificationPreferences,
@@ -33,6 +34,7 @@ export default function SettingsScreen() {
   const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [isTestingNotification, setIsTestingNotification] = useState(false);
 
   // Backend'den notification preferences çek
   const { data: preferences, isLoading: isLoadingPreferences } =
@@ -135,6 +137,35 @@ export default function SettingsScreen() {
     }
   };
 
+  // Test notification gönder
+  const handleTestNotification = async (
+    type: "daily-reminder" | "motivation"
+  ) => {
+    if (!isAuthenticated) {
+      setSnackbarMessage("Test bildirimi göndermek için giriş yapmalısınız");
+      setSnackbarVisible(true);
+      return;
+    }
+
+    setIsTestingNotification(true);
+    try {
+      if (type === "daily-reminder") {
+        await notificationApi.testDailyReminder();
+        setSnackbarMessage("Günlük hatırlatma test bildirimi gönderildi");
+      } else {
+        await notificationApi.testMotivation();
+        setSnackbarMessage("Motivasyon test bildirimi gönderildi");
+      }
+      setSnackbarVisible(true);
+    } catch (error: any) {
+      console.error("Error sending test notification:", error);
+      setSnackbarMessage("Test bildirimi gönderilirken bir hata oluştu");
+      setSnackbarVisible(true);
+    } finally {
+      setIsTestingNotification(false);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Card style={styles.card}>
@@ -175,6 +206,30 @@ export default function SettingsScreen() {
             }}
             disabled={!isAuthenticated || isLoadingPreferences}
           />
+          <Divider style={styles.divider} />
+          <Text variant="bodySmall" style={styles.testSectionTitle}>
+            Test Bildirimleri
+          </Text>
+          <Button
+            mode="outlined"
+            onPress={() => handleTestNotification("daily-reminder")}
+            disabled={!isAuthenticated || isTestingNotification}
+            loading={isTestingNotification}
+            style={styles.testButton}
+            icon="bell-ring"
+          >
+            Günlük Hatırlatma Testi
+          </Button>
+          <Button
+            mode="outlined"
+            onPress={() => handleTestNotification("motivation")}
+            disabled={!isAuthenticated || isTestingNotification}
+            loading={isTestingNotification}
+            style={styles.testButton}
+            icon="heart"
+          >
+            Motivasyon Testi
+          </Button>
         </Card.Content>
       </Card>
 
@@ -279,5 +334,13 @@ const styles = StyleSheet.create({
   },
   divider: {
     marginBottom: 8,
+  },
+  testSectionTitle: {
+    marginTop: 8,
+    marginBottom: 8,
+    opacity: 0.7,
+  },
+  testButton: {
+    marginTop: 8,
   },
 });
